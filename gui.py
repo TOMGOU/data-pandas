@@ -14,6 +14,7 @@ import time
 class upload(QWidget):
   def __init__(self):
     super(upload, self).__init__()
+    self.switch = True
     self.initUI()
 
   def initUI(self):
@@ -60,16 +61,21 @@ class upload(QWidget):
   def set_label_func(self, text):
     self.result_le.setText(text)
 
+  def switch_func(self, bools):
+    self.switch = bools
+
   def kick(self):
     key_words = self.key_le.text().strip()#关键词
     target = self.target_le.text().strip()#保存路径
-    self.set_label_func('请勿关闭浏览器，数据疯狂获取中...')
-    self.my_thread = MyThread(key_words, target, self.set_label_func)#实例化线程对象
-    self.my_thread.start()#启动线程
-    self.my_thread.my_signal.connect(self.set_label_func)
+    if self.switch and key_words != '' and target != '':
+      self.switch = False
+      self.set_label_func('请勿关闭浏览器，数据疯狂获取中...')
+      self.my_thread = MyThread(key_words, target, self.set_label_func)#实例化线程对象
+      self.my_thread.start()#启动线程
+      self.my_thread.my_signal.connect(self.switch_func)
 
 class MyThread(QThread):#线程类
-  my_signal = pyqtSignal(str)  #自定义信号对象。参数str就代表这个信号可以传一个字符串
+  my_signal = pyqtSignal(bool)  #自定义信号对象。参数str就代表这个信号可以传一个字符串
   def __init__(self, key_words, target, set_label_func):
     super(MyThread, self).__init__()
     self.key_words = key_words
@@ -82,7 +88,8 @@ class MyThread(QThread):#线程类
       string = '获取了' + str(length) + '条数据，请直接查看excel表格！'
     else: 
       string = '没有抓取到数据，请尝试其他关键词！'
-    self.my_signal.emit(string)  #释放自定义的信号
+    self.set_label_func(string)
+    self.my_signal.emit(True)  #释放自定义的信号
 
   def fetchData(self, key_words, target, set_label_func):
     browser = webdriver.Chrome()
