@@ -2,6 +2,7 @@ import win_unicode_console
 win_unicode_console.enable()
 import sys,os
 # from PyQt5.QtCore import *
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit, QLabel, QApplication, QFileDialog)
 from selenium import webdriver
@@ -11,9 +12,9 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
 
-class upload(QWidget):
+class crawler(QWidget):
   def __init__(self):
-    super(upload, self).__init__()
+    super(crawler, self).__init__()
     self.switch = True
     self.initUI()
 
@@ -42,16 +43,23 @@ class upload(QWidget):
     self.save_btn.resize(140, 30)
     self.save_btn.clicked.connect(self.kick)
 
-    #执行成功返回值显示位置设置
-    self.result_le = QLabel('', self)
+    #用户提示区
+    self.result_le = QLabel('请输入关键词和保存路径（包含excel文件名后缀）', self)
     self.result_le.move(30, 270)
     self.result_le.resize(340, 30)
     self.result_le.setStyleSheet('color: blue;')
 
     #整体界面设置
-    self.setGeometry(400, 400, 400, 400)
+    # self.setGeometry(400, 400, 400, 400)
+    self.resize(400, 400)
+    self.center()
     self.setWindowTitle('小猪找货')#设置界面标题名
     self.show()
+  
+  def center(self):
+    screen = QtWidgets.QDesktopWidget().screenGeometry()#获取屏幕分辨率
+    size = self.geometry()#获取窗口尺寸
+    self.move(int((screen.width() - size.width()) / 2), int((screen.height() - size.height()) / 2))#利用move函数窗口居中
 
   #保存的excel文件名称，要写上后缀名
   def select_target(self):
@@ -69,7 +77,7 @@ class upload(QWidget):
     target = self.target_le.text().strip()#保存路径
     if self.switch and key_words != '' and target != '':
       self.switch = False
-      self.set_label_func('请勿关闭浏览器，数据疯狂获取中...')
+      self.set_label_func('请耐心等待，数据疯狂抓取中...')
       self.my_thread = MyThread(key_words, target, self.set_label_func)#实例化线程对象
       self.my_thread.start()#启动线程
       self.my_thread.my_signal.connect(self.switch_func)
@@ -92,7 +100,11 @@ class MyThread(QThread):#线程类
     self.my_signal.emit(True)  #释放自定义的信号
 
   def fetchData(self, key_words, target, set_label_func):
+    option = webdriver.ChromeOptions()
+    # option.add_argument('headless')
     browser = webdriver.Chrome()
+    # browser = webdriver.Chrome(executable_path='/Users/tangyong/Application/chromedriver')
+    # browser = webdriver.Chrome(executable_path='/Users/tangyong/Application/chromedriver', options=option)
     browser.get('https://z.vanmmall.com/?from=singlemessage&isappinstalled=0')
     browser.find_element_by_id('kw').send_keys(key_words)
     search = browser.find_element_by_id('btn_search')
@@ -121,7 +133,7 @@ class MyThread(QThread):#线程类
       self.set_label_func(process_str)
     browser.quit()
     self.set_label_func('excel表格保存中...')
-    self.saveDataToExcel(data, target)
+    self.saveDataToExcel(data, target, key_words)
     return data_length
 
   def isElementExist(self, browser, element):
@@ -133,17 +145,24 @@ class MyThread(QThread):#线程类
       flag=False
       return flag
 
-  def saveDataToExcel(self, data, target):
+  def saveDataToExcel(self, data, target, key_words):
     if len(data) == 0:
       return
     data_df = pd.DataFrame(data)
     data_df.columns = ['日期','商家','产品信息+报价','微信号','手机号']
-    writer = pd.ExcelWriter(target)
-    data_df.to_excel(writer, float_format='%.5f')
+    writer = pd.ExcelWriter(target, engine='xlsxwriter')
+    data_df.to_excel(writer, float_format='%.5f', index=True, index_label='索引', na_rep='--', sheet_name=key_words)
+    worksheets = writer.sheets
+    worksheet = worksheets[key_words]
+    worksheet.set_column("B:B", 10)
+    worksheet.set_column("C:C", 30)
+    worksheet.set_column("D:D", 30)
+    worksheet.set_column("E:E", 20)
+    worksheet.set_column("F:F", 20)
     writer.save()
 
 if __name__=="__main__":
   app = QApplication(sys.argv)
-  ex = upload()
+  ex = crawler()
   ex.show()
   sys.exit(app.exec_())
