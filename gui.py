@@ -101,8 +101,8 @@ class MyThread(QThread):#线程类
 
   def fetchData(self, key_words, target, set_label_func):
     option = webdriver.ChromeOptions()
-    # option.add_argument('headless')
-    browser = webdriver.Chrome()
+    option.add_argument('headless')
+    browser = webdriver.Chrome(options=option)
     # browser = webdriver.Chrome(executable_path='/Users/tangyong/Application/chromedriver')
     # browser = webdriver.Chrome(executable_path='/Users/tangyong/Application/chromedriver', options=option)
     browser.get('https://z.vanmmall.com/?from=singlemessage&isappinstalled=0')
@@ -154,7 +154,7 @@ class MyThread(QThread):#线程类
     data_df.to_excel(writer, float_format='%.5f', index=True, index_label='索引', na_rep='--', sheet_name=key_words)
     worksheets = writer.sheets
     worksheet = worksheets[key_words]
-    worksheet.set_column("B:B", 10)
+    worksheet.set_column("B:B", 15)
     worksheet.set_column("C:C", 30)
     worksheet.set_column("D:D", 30)
     worksheet.set_column("E:E", 20)
