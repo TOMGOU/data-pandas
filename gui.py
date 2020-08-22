@@ -1,7 +1,6 @@
 import win_unicode_console
 win_unicode_console.enable()
 import sys,os
-# from PyQt5.QtCore import *
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit, QLabel, QApplication, QFileDialog)
@@ -10,11 +9,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
-import time
 
-class crawler(QWidget):
+class Crawler(QWidget):
   def __init__(self):
-    super(crawler, self).__init__()
+    super(Crawler, self).__init__()
     self.switch = True
     self.initUI()
 
@@ -37,7 +35,7 @@ class crawler(QWidget):
     self.target_le.move(120, 90)
     self.target_le.resize(250, 30)
 
-    #保存按钮，调取数爬取函数等
+    #保存按钮，调用数据爬取函数
     self.save_btn = QPushButton('开始',self)
     self.save_btn.move(200, 200)
     self.save_btn.resize(140, 30)
@@ -55,7 +53,8 @@ class crawler(QWidget):
     self.center()
     self.setWindowTitle('小猪找货')#设置界面标题名
     self.show()
-  
+
+  # 窗口居中函数
   def center(self):
     screen = QtWidgets.QDesktopWidget().screenGeometry()#获取屏幕分辨率
     size = self.geometry()#获取窗口尺寸
@@ -69,6 +68,7 @@ class crawler(QWidget):
   def set_label_func(self, text):
     self.result_le.setText(text)
 
+  # 避免重复点击开关
   def switch_func(self, bools):
     self.switch = bools
 
@@ -83,7 +83,7 @@ class crawler(QWidget):
       self.my_thread.my_signal.connect(self.switch_func)
 
 class MyThread(QThread):#线程类
-  my_signal = pyqtSignal(bool)  #自定义信号对象。参数str就代表这个信号可以传一个字符串
+  my_signal = pyqtSignal(bool)  #自定义信号对象。参数bool就代表这个信号可以传一个布尔值
   def __init__(self, key_words, target, set_label_func):
     super(MyThread, self).__init__()
     self.key_words = key_words
@@ -163,6 +163,6 @@ class MyThread(QThread):#线程类
 
 if __name__=="__main__":
   app = QApplication(sys.argv)
-  ex = crawler()
+  ex = Crawler()
   ex.show()
   sys.exit(app.exec_())
