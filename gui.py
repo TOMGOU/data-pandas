@@ -103,6 +103,7 @@ class MyThread(QThread):#线程类
     option = webdriver.ChromeOptions()
     option.add_argument('headless')
     browser = webdriver.Chrome(options=option)
+    # browser = webdriver.Chrome()
     # browser = webdriver.Chrome(executable_path='/Users/tangyong/Application/chromedriver')
     # browser = webdriver.Chrome(executable_path='/Users/tangyong/Application/chromedriver', options=option)
     browser.get('https://z.vanmmall.com/?from=singlemessage&isappinstalled=0')
@@ -110,7 +111,7 @@ class MyThread(QThread):#线程类
     search = browser.find_element_by_id('btn_search')
     search.click()
     self.sleep(2)
-    while not self.isElementExist(browser, '.dropload-noData'):
+    while (not self.isElementExist(browser, '.dropload-noData')) and (not self.isElementExist(browser, '.layui-m-layerbtn')):
       browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
       self.sleep(1)
     date = browser.find_elements_by_css_selector('td.date')
